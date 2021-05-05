@@ -343,14 +343,15 @@ def _voxcel_x(root_path, meta_file, voxcel_idx):
 def russian_tts(root_path, meta_file=None):
     items = []
     for folder in os.listdir(root_path):
-        with open(f'{root_path}/{folder}/metadata.csv', 'r') as ttf:
-            for line in ttf:
-                cols = line.split('|')
-                wav_file = os.path.join(root_path, folder, cols[0])
-                if not wav_file.endswith('.wav'):
-                    wav_file+='.wav'
-                    print(wav_file)
-                text = cols[1]
-                items.append([text, wav_file,  folder])
+        if folder !='.gitkeep':
+            with open(f'{root_path}/{folder}/metadata.csv', 'r') as ttf:
+                for line in ttf:
+                    cols = line.split('|')
+                    wav_file = os.path.join(root_path, folder, cols[0])
+                    if not wav_file.endswith('.wav'):
+                        wav_file+='.wav'
+                        print(wav_file)
+                    text = cols[1]
+                    items.append([text, wav_file,  folder])
     return items
 
