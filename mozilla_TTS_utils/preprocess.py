@@ -351,7 +351,7 @@ def russian_tts(root_path, meta_file=None):
                     if not wav_file.endswith('.wav'):
                         wav_file+='.wav'
                         print(wav_file)
-                    text = cols[1]
+                    text = cols[1].strip()
                     items.append([text, wav_file,  folder])
     return items
 

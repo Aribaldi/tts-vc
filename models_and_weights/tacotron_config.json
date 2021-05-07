@@ -14,7 +14,7 @@
 
         // Audio processing parameters
         "sample_rate": 16000,   // DATASET-RELATED: wav sample-rate.
-        "preemphasis": 0.0,     // pre-emphasis to reduce spec noise and make it more structured. If 0.0, no -pre-emphasis.
+        "preemphasis": 0.98,     // pre-emphasis to reduce spec noise and make it more structured. If 0.0, no -pre-emphasis.
         "ref_level_db": 20,     // reference level db, theoretically 20db is the sound of air.
 
         // Silence trimming
@@ -22,7 +22,7 @@
         "trim_db": 60,          // threshold for timming silence. Set this according to your dataset.
 
         // Griffin-Lim
-        "power": 1.5,           // value to sharpen wav signals after GL algorithm.
+        "power": 1.4,           // value to sharpen wav signals after GL algorithm.
         "griffin_lim_iters": 60,// #griffin-lim iterations. 30-60 is a good range. Larger the value, slower the generation.
 
         // MelSpectrogram parameters
@@ -130,7 +130,7 @@
     "num_val_loader_workers": 4,    // number of evaluation data loader processes.
     "batch_group_size": 4,  //Number of batches to shuffle after bucketing.
     "min_seq_len": 6,       // DATASET-RELATED: minimum text length to use in training
-    "max_seq_len": 153,     // DATASET-RELATED: maximum text length
+    "max_seq_len": 200,     // DATASET-RELATED: maximum text length
     "compute_input_seq_cache": true,  // if true, text sequences are computed before starting training. If phonemes are enabled, they are also computed at this stage.
     "use_noise_augment": true,
 
