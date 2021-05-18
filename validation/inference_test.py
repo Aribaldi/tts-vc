@@ -13,8 +13,15 @@ from mozilla_TTS_utils.audio import AudioProcessor
 from mozilla_TTS_utils.io import load_config
 from mozilla_TTS_utils.vocoder.utils.generic_utils import setup_generator, interpolate_vocoder_input
 
+OUT_PATH = '../tests-audios_3/'
+# os.makedirs(OUT_PATH, exist_ok=True)
+MODEL_PATH = '/home/iref/Desktop/best_model.pth.tar'
+CONFIG_PATH = '/home/iref/Desktop/config.json'
+SPEAKER_JSON = '/home/iref/PycharmProjects/tts-vc/data/preprocessed_mozilla/speaker.json'
+VOCODER_PATH = '/home/iref/Desktop/vocoder/best_model_200.pth.tar'
+VOCODER_CONFIG_PATH = '/home/iref/Desktop/vocoder/config.json'
 USE_CUDA = True
-SPEAKER_JSON = '../data/preprocessed_mozilla/speaker.json'
+
 
 def tts(model, vocoder_model, text, CONFIG, use_cuda, ap, use_gl, speaker_fileid, speaker_embedding=None):
     t_1 = time.time()
@@ -31,17 +38,16 @@ def tts(model, vocoder_model, text, CONFIG, use_cuda, ap, use_gl, speaker_fileid
     waveform = waveform.squeeze()
     rtf = (time.time() - t_1) / (len(waveform) / ap.sample_rate)
     tps = (time.time() - t_1) / len(waveform)
-    print(" > Run-time: {}".format(time.time() - t_1))
-    print(" > Real-time factor: {}".format(rtf))
-    print(" > Time per step: {}".format(tps))
+    #print(" > Run-time: {}".format(time.time() - t_1))
+    #print(" > Real-time factor: {}".format(rtf))
+    #print(" > Time per step: {}".format(tps))
     return waveform
 
 
 
-def get_wav_output(speaker, text_path,
+def get_wav_output(speaker, text,
                    model_path, model_config_path,
                    vocoder_path, vocoder_config_path,
-                   sentence_num,
                    output_path, save_wavs = True):
     C = load_config(model_config_path)
     C.forward_attn_mask = True
@@ -105,39 +111,15 @@ def get_wav_output(speaker, text_path,
     else:
         SPEAKER_FILEID = None
 
-    sents = []
-    with open(text_path) as ttf:
-        for line in ttf:
-            cols = line.split('|')
-            text = cols[1].strip()
-            text = cols[1].strip(',')
-            if len(text) < 130:
-                temp = {}
-                temp['text'] = text
-                temp['name'] = cols[0]
-                sents.append(temp)
-    with open(f'{output_path}sentences.json', 'w') as f:
-        json.dump(sents[:sentence_num], f)
 
-    for d in sents[:sentence_num]:
-        print(d['text'], '\n')
-        wav = tts(model, vocoder_model, d['text'], C, USE_CUDA, ap, use_griffin_lim, SPEAKER_FILEID,
-                  speaker_embedding=speaker_embedding)
-        #file_name = text.replace(" ", "_")
-        #file_name = file_name.translate(str.maketrans('', '', string.punctuation.replace('_', ''))) + '.wav'
-        file_name = f'{d["name"]}_generated.wav'
-        out_path = os.path.join(output_path, file_name)
-        if save_wavs:
-            ap.save_wav(wav, out_path)
+    wav = tts(model, vocoder_model, text, C, USE_CUDA, ap, use_griffin_lim, SPEAKER_FILEID, speaker_embedding=speaker_embedding)
+    # file_name = text.replace(" ", "_")
+    # file_name = file_name.translate(str.maketrans('', '', string.punctuation.replace('_', ''))) + '.wav'
+    # file_name = f'{d["name"]}'
+    # out_path = os.path.join(output_path, file_name)
+    # if save_wavs:
+    #     ap.save_wav(wav, out_path)
+    return wav
 
-if __name__ == '__main__':
-    OUT_PATH = '../tests-audios_3/'
-    #os.makedirs(OUT_PATH, exist_ok=True)
-    SPEAKER = 'user11'
-    MODEL_PATH = '/home/iref/Desktop/best_model.pth.tar'
-    CONFIG_PATH = '/home/iref/Desktop/config.json'
-    SPEAKER_JSON = '../data/preprocessed_mozilla/speaker.json'
-    VOCODER_PATH = '/home/iref/Desktop/vocoder/best_model_200.pth.tar'
-    VOCODER_CONFIG_PATH = '/home/iref/Desktop/vocoder/config.json'
-    TEXT_PATH = f'/home/iref/tts-vc/data/speaker_encoder_data/{SPEAKER}/metadata.csv'
-    print(get_wav_output(SPEAKER, TEXT_PATH, MODEL_PATH, CONFIG_PATH, VOCODER_PATH, VOCODER_CONFIG_PATH, 10, OUT_PATH, save_wavs=True))
+
+
