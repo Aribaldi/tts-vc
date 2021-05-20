@@ -41,7 +41,7 @@ def pitch_val_pipeline():
     result['User2_gen_sim'] = u2_sim
     result['User2_gen_L2'] = u2_L2
     print(result.mean(axis=0))
-    result.to_csv('/home/iref/PycharmProjects/tts-vc/validation/pitch_val_seen.csv')
+    result.to_csv('/home/iref/PycharmProjects/tts-vc/validation/pitch_val_unseen.csv')
     return result
 
 
@@ -49,7 +49,9 @@ def pitch_val_pipeline():
 
 def get_same_phrases(mode='val'):
     root_path = ROOT_PATH
-    users_list = [f'user{i}' for i in range(1, 31)]
+    #users_list = [f'user{i}' for i in range(1, 31)]
+    users_list = [x for x in os.listdir(root_path) if len(x) == 3]
+    print(users_list)
     items = {}
     for user in users_list:
         items[user] = {'text': [], 'files':[]}
@@ -148,7 +150,16 @@ def get_metrics(user1, user2, mode='val'):
             np.inner(g_embed_2, o_embed_2), np.linalg.norm(o_embed_2 - g_embed_2)
 
 
-#print(get_similarity_score(ORIGS, GENERATED, 10))
 #print(get_same_phrases())
-#print(diff_speakers_same_phrases('user15', 'user2'))
-print(pitch_val_pipeline())
+#print(pitch_val_pipeline())
+
+frame = np.round(pd.read_csv('/home/iref/PycharmProjects/tts-vc/validation/pitch_val_unseen.csv', index_col=0), 2)
+print(frame.columns)
+frame.columns = ['UserA', 'UserB', 'ABsim', 'L2betweenoriginals', 'Ageneratedsim',
+                                   'L2 distance between user A and generated speaker', 'Bgeneratedsim',
+                                   'L2 distance between user A and generated speaker']
+sim_frame = frame[['UserA', 'UserB', 'ABsim', 'Ageneratedsim', 'Bgeneratedsim']]
+overall_frame = sim_frame.median()
+print(overall_frame)
+#sim_frame.to_csv('/run/media/iref/Seagate Expansion Drive/spbu_diploma/sim_frame_unseen.csv', sep=',', decimal='.', index=False)
+#frame.to_csv('/home/iref/PycharmProjects/tts-vc/validation/test_frame.csv', sep='\t', decimal=',', index=False)

@@ -45,7 +45,7 @@ def tts(model, vocoder_model, text, CONFIG, use_cuda, ap, use_gl, speaker_fileid
 
 
 
-def get_wav_output(speaker, text,
+def get_wav_output(speaker, speaker_json, text,
                    model_path, model_config_path,
                    vocoder_path, vocoder_config_path,
                    output_path, save_wavs = True):
@@ -62,7 +62,7 @@ def get_wav_output(speaker, text,
     num_speakers = 0
     SPEAKER_FILEID = ''
 
-    speaker_mapping = json.load(open(SPEAKER_JSON, 'r'))
+    speaker_mapping = json.load(open(speaker_json, 'r'))
     num_speakers = len(speaker_mapping)
     for filename, d in speaker_mapping.items():
         if d['name'] == speaker:
@@ -113,12 +113,12 @@ def get_wav_output(speaker, text,
 
 
     wav = tts(model, vocoder_model, text, C, USE_CUDA, ap, use_griffin_lim, SPEAKER_FILEID, speaker_embedding=speaker_embedding)
-    # file_name = text.replace(" ", "_")
-    # file_name = file_name.translate(str.maketrans('', '', string.punctuation.replace('_', ''))) + '.wav'
-    # file_name = f'{d["name"]}'
-    # out_path = os.path.join(output_path, file_name)
-    # if save_wavs:
-    #     ap.save_wav(wav, out_path)
+    file_name = text.replace(" ", "_")
+    file_name = file_name.translate(str.maketrans('', '', string.punctuation.replace('_', ''))) + '.wav'
+    #file_name = f'{d["name"]}'
+    out_path = os.path.join(output_path, file_name)
+    if save_wavs:
+        ap.save_wav(wav, out_path)
     return wav
 
 

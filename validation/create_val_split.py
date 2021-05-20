@@ -6,7 +6,7 @@ import shutil
 from pydub import AudioSegment
 
 ROOT_PATH = Path('/home/iref/tts-vc/data/speaker_encoder_data/')
-VAL_PATH = Path('/home/iref/Datasets/cv-corpus-6.1-2020-12-11/ru/')
+VAL_PATH = Path('/home/iref/Datasets/cv-corpus-5.1-2020-06-22/ru/')
 VAL_WAV = VAL_PATH / 'clips'
 OUT_DIR = Path('/home/iref/PycharmProjects/tts-vc/data/val_data')
 
@@ -35,21 +35,22 @@ speakers_list = set(speakers_list)
 print(len(speakers_list))
 
 clear = val_df[~val_df['client_id'].isin(speakers_list)]
+print(len(clear['sentence'].unique()) == len(clear))
 
-i = 1
-for cl in clear['client_id'].unique():
-    dest = OUT_DIR / f'user{i}'
-    os.makedirs(dest, exist_ok=True)
-    temp = clear.loc[clear['client_id'] == cl]
-    for filename in temp['path'].unique():
-        #shutil.copyfile(VAL_WAV / filename, dest / filename)
-        t = AudioSegment.from_mp3(VAL_WAV / filename)
-        t = t.set_channels(1)
-        t.set_frame_rate(16000)
-        t.export(dest / str(filename[:-3] + 'wav'), format='wav')
-
-    meta = temp.drop(temp.columns.difference(['path','sentence']), 1)
-    meta['path'] = meta['path'].apply(lambda x: x.replace('mp3', 'wav'))
-    meta.to_csv(dest / 'metadata.csv', index=False, sep='\t', header=None)
-    i += 1
+# i = 1
+# for cl in clear['client_id'].unique():
+#     dest = OUT_DIR / f'user{i}'
+#     os.makedirs(dest, exist_ok=True)
+#     temp = clear.loc[clear['client_id'] == cl]
+#     for filename in temp['path'].unique():
+#         #shutil.copyfile(VAL_WAV / filename, dest / filename)
+#         t = AudioSegment.from_mp3(VAL_WAV / filename)
+#         t = t.set_channels(1)
+#         t.set_frame_rate(16000)
+#         t.export(dest / str(filename[:-3] + 'wav'), format='wav')
+#
+#     meta = temp.drop(temp.columns.difference(['path','sentence']), 1)
+#     meta['path'] = meta['path'].apply(lambda x: x.replace('mp3', 'wav'))
+#     meta.to_csv(dest / 'metadata.csv', index=False, sep='\t', header=None)
+#     i += 1
 
