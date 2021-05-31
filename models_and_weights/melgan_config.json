@@ -1,17 +1,5 @@
 {
-"github_branch":"* fullband-melgan",
-"restore_path":"/data4/rw/home/Trainings/LJSpeech/fullband-melgan-September-15-2020_10+36AM-c2d131c/checkpoint_850000.pth.tar",
-"github_branch":"* fullband-melgan",
-"restore_path":"/data4/rw/home/Trainings/LJSpeech/fullband-melgan-September-15-2020_10+36AM-c2d131c/checkpoint_850000.pth.tar",
-"github_branch":"* fullband-melgan",
-"restore_path":"/data4/rw/home/Trainings/LJSpeech/fullband-melgan-September-15-2020_10+36AM-c2d131c/checkpoint_850000.pth.tar",
-"github_branch":"* fullband-melgan",
-"restore_path":"/data4/rw/home/Trainings/LJSpeech/fullband-melgan-September-15-2020_10+36AM-c2d131c/best_model.pth.tar",
-"github_branch":"* fullband-melgan",
-"restore_path":"/data4/rw/home/Trainings/LJSpeech/fullband-melgan-September-15-2020_10+36AM-c2d131c/checkpoint_200000.pth.tar",
-"github_branch":"* fullband-melgan",
-"restore_path":"/data4/rw/home/Trainings/LJSpeech/fullband-melgan-September-15-2020_10+36AM-c2d131c/best_model.pth.tar",
-"github_branch":"* fullband-melgan",
+"github_branch":"* main",
     "run_name": "fullband-melgan",
     "run_description": "fullband melgan mean-var scaling",
 
@@ -25,7 +13,7 @@
 
         // Audio processing parameters
         "sample_rate": 16000,   // DATASET-RELATED: wav sample-rate. If different than the original data, it is resampled.
-        "preemphasis": 0.0,     // pre-emphasis to reduce spec noise and make it more structured. If 0.0, no -pre-emphasis.
+        "preemphasis": 0.98,     // pre-emphasis to reduce spec noise and make it more structured. If 0.0, no -pre-emphasis.
         "ref_level_db": 20,     // reference level db, theoretically 20db is the sound of air.
 
         // Silence trimming
@@ -86,7 +74,7 @@
         "max_channels":512,
         "downsample_factors":[4, 4, 4]
     },
-    "steps_to_start_discriminator": 200000,      // steps required to start GAN trainining.1
+    "steps_to_start_discriminator": 0,      // steps required to start GAN trainining.1
 
     // GENERATOR
     "generator_model": "fullband_melgan_generator",
@@ -96,7 +84,7 @@
     },
 
     // DATASET
-    "data_path": "data/vocoder_data/",
+    "data_path": "/root/tts-vc/data/speaker_encoder_data",
     "feature_path": null,
     "seq_len": 16384,
     "pad_short": 2000,
@@ -140,12 +128,12 @@
     "tb_model_param_stats": false,     // true, plots param stats per layer on tensorboard. Might be memory consuming, but good for debugging.
 
     // DATA LOADING
-    "num_loader_workers": 4,        // number of training data loader processes. Don't set it too big. 4-8 are good values.
-    "num_val_loader_workers": 4,    // number of evaluation data loader processes.
+    "num_loader_workers": 8,        // number of training data loader processes. Don't set it too big. 4-8 are good values.
+    "num_val_loader_workers": 8,    // number of evaluation data loader processes.
     "eval_split_size": 10,
 
     // PATHS
-    "output_path": "../data/vocoder_output/"
+    "output_path": "/root/tts-vc/data/vocoder_output/"
 }
 
 

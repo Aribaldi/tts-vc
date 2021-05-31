@@ -7,8 +7,8 @@ import re
 from pydub import AudioSegment
 import glob
 
-wav_data_path = Path('../data/speaker_encoder_data')
-embeddings_path = Path('../data/preprocessed_mozilla')
+wav_data_path = Path('../data/val_data/')
+embeddings_path = Path('../data/val_speaker_embeddings')
 mono_path = Path('/home/iref/Desktop/Diploma/mono/')
 
 def make_speakers_json():
@@ -25,7 +25,7 @@ def make_speakers_json():
 
         print(len(speaker_mapping.keys()))
 
-        with open('../data/preprocessed_mozilla/speaker.json', 'w') as fp:
+        with open('../data/val_speaker_embeddings/speaker.json', 'w') as fp:
             json.dump(speaker_mapping, fp)
 
 def russian_tts(root_path):
@@ -57,9 +57,10 @@ def mono_conversion(output_path):
             sound = sound.set_channels(1)
             sound.export(output_path / folder / f, format="wav")
 
-import shutil
-for folder in os.listdir(wav_data_path):
-    shutil.copyfile(wav_data_path / folder / 'metadata.csv', mono_path / folder / 'metadata.csv')
+#import shutil
+#for folder in os.listdir(wav_data_path):
+    #shutil.copyfile(wav_data_path / folder / 'metadata.csv', mono_path / folder / 'metadata.csv')
 #mono_conversion(mono_path)
 # print(len(russian_tts(wav_data_path)))
+make_speakers_json()
 

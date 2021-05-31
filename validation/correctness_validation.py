@@ -1,73 +1,71 @@
 import speech_recognition as sr
-import os
 from pathlib import Path
-import json
 import pandas as pd
-import gensim
 import string
 import numpy as np
-import tensorflow as tf
-import tensorflow_hub as hub
+import Levenshtein as L
 
-TEXT_PATH = Path('/run/media/iref/Seagate Expansion Drive/correctness_tests/text.txt')
-AUDIO_PATH = Path('/run/media/iref/Seagate Expansion Drive/correctness_tests/')
-SEEN_SPEAKERS_JSON = Path('/home/iref/PycharmProjects/tts-vc/data/preprocessed_mozilla/speaker.json')
-UNSEEN_SPEAKERS_JSON = Path('/home/iref/PycharmProjects/tts-vc/data/val_speaker_embeddings/speaker.json')
-from inference_test import get_wav_output
-from inference_test import MODEL_PATH, CONFIG_PATH, VOCODER_PATH, VOCODER_CONFIG_PATH
+from paths import *
+from inference_test import Inferencer
 
 
-module_url = "https://tfhub.dev/google/universal-sentence-encoder/4"
-model = hub.load(module_url)
-print ("module %s loaded" % module_url)
+bounds = [0, 20, 80, 140]
+
 
 def pipeline(speakers_list, save_audio_path):
-
-    acc = []
-    dists = []
+    if len(speakers_list) == 30:
+        inf = Inferencer(GRAPHEME_MODEL_PATH, VOCODER_PATH, ENCODER_PATH, GRAPHEME_CONFIG_PATH, VOCODER_CONFIG_PATH, ENCODER_CONFIG,
+                         SEEN_SPEAKERS_JSON)
+    else:
+        inf = Inferencer(GRAPHEME_MODEL_PATH, VOCODER_PATH, ENCODER_PATH, GRAPHEME_CONFIG_PATH, VOCODER_CONFIG_PATH, ENCODER_CONFIG,
+                         UNSEEN_SPEAKERS_JSON)
+    result = []
     for speaker in speakers_list:
+        user_stats_df = pd.DataFrame(columns=['User', 'Phrase len', 'L Dist', 'Share'])
         with open(TEXT_PATH, 'r') as tf:
             for line in tf:
                 line = line.strip()
-                get_wav_output(speaker, UNSEEN_SPEAKERS_JSON, line, MODEL_PATH, CONFIG_PATH, VOCODER_PATH, VOCODER_CONFIG_PATH,
-                               save_audio_path, save_wavs=True)
+                inf.get_json_output(speaker, line, save_audio_path)
 
         comparison = pd.DataFrame(get_transcription(AUDIO_PATH))
-        right_share = []
-        l2s = []
         for ind, row in comparison.iterrows():
-            original = set(row['original_text'])
-            orig_embed = model([original])[0]
-            tr = set(row['transcription'])
+            original = row['original_text']
+            tr = row['transcription']
             if tr != 'TE':
-                inter = original.intersection(tr)
-                right_share.append(len(inter) / len(original))
-                tr_embed = model([tr])[0]
-                l2s.append(np.linalg.norm(orig_embed, tr_embed))
+                leven = L.distance(original, tr)
+                share = np.round(leven / len(original), 2)
+                user_stats_df.loc[ind] = [speaker, len(original), leven, share]
 
-        acc.append(np.mean(right_share))
-        dists.append(np.mean(dists))
+        short = ''
+        medium = ''
+        long = ''
+        for i in range(len(bounds) - 1):
+            temp = user_stats_df.loc[user_stats_df['Phrase len'].isin(range(bounds[i], bounds[i + 1]))]
+            d_mean = np.round(temp["L Dist"].mean(), 2)
+            s_mean = np.round(temp["Share"].mean(), 2)
+            if i == 0:
+                short = f'{d_mean}/{s_mean}'
+            if i == 1:
+                medium = f'{d_mean}/{s_mean}'
+            if i == 2:
+                long = f'{d_mean}/{s_mean}'
+        result.append({'User': speaker, 'Short': short, 'Medium': medium, 'Long':long})
 
-    result = pd.DataFrame(columns=['User', 'Accuracy'])
-    result['User'] = speakers_list
-    result['Accuracy'] = acc
-    result['USE distances'] = dists
-    result.to_csv('/run/media/iref/Seagate Expansion Drive/spbu_diploma/c_check.csv')
-    return result
 
-
-
-
+    res = pd.DataFrame(result)
+    res.to_csv('/run/media/iref/Seagate Expansion Drive/spbu_diploma/test.csv')
+    print(res)
 
 
 def get_transcription(input_audio_path):
     result = []
-    with open(input_audio_path / 'text.txt', 'r') as f:
+    with open(input_audio_path / 'text2.txt', 'r') as f:
         for line in f:
-            line = line.strip()
-            r = sr.Recognizer()
             temp = line.replace(" ", "_")
-            with sr.AudioFile(str(input_audio_path / temp) + '.wav') as source:
+            temp = temp.strip()
+            temp = temp.translate(str.maketrans('', '', string.punctuation.replace('_', ''))) + '.wav'
+            r = sr.Recognizer()
+            with sr.AudioFile(str(input_audio_path / temp)) as source:
                 audio = r.record(source)
                 try:
                     transcr = r.recognize_google(audio, language='ru-RU')
@@ -75,9 +73,24 @@ def get_transcription(input_audio_path):
                     transcr = 'TE'
                 except sr.RequestError:
                     transcr = 'RE'
-                result.append({'original_text':line, 'transcription': transcr})
+                result.append({'original_text':line.strip(), 'transcription': transcr})
         return result
 
 
-print(pipeline([f'user{i}' for i in range(1, 6)], AUDIO_PATH))
-#print(get_transcription(AUDIO_PATH))
+def get_overall_stats(df_path):
+    df = pd.read_csv(df_path, index_col=0)
+    for l in ['Short', 'Medium', 'Long']:
+        temp = df[l].to_list()
+        L_d = []
+        for el in temp:
+            buf = el.split('/')
+            L_d.append(float(buf[0]))
+        print(np.mean(L_d))
+
+if __name__ == '__main__':
+    print(pipeline([f'user{i}' for i in range(1, 6)], AUDIO_PATH))
+    get_overall_stats('/run/media/iref/Seagate Expansion Drive/spbu_diploma/test.csv')
+
+
+
+

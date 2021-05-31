@@ -1,9 +1,10 @@
 *.wav
 *.npy
 *.csv
-/data/preprocessed/**
 /notebooks/.ipynb_checkpoints
-/data/tts_output/train_launch_1-April-11-2021_11+07PM-9ed73b3/**
 /venv/**
 *.zip
 *.pyc
+/notebooks/dataset_analysis/.ipynb_checkpoints
+/notebooks/dataset_analysis/WadaSNR/
+*.tar

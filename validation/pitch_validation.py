@@ -6,14 +6,25 @@ import numpy as np
 ROOT_PATH = Path('/home/iref/tts-vc/data/speaker_encoder_data/')
 encoder = res.VoiceEncoder()
 import pandas as pd
-from inference_test import OUT_PATH, MODEL_PATH, CONFIG_PATH, SPEAKER_JSON, VOCODER_PATH, VOCODER_CONFIG_PATH, USE_CUDA
-from inference_test import get_wav_output
+
+from paths import *
+from inference_test import Inferencer
 
 
-def pitch_val_pipeline():
+def pitch_val_pipeline(users_type):
     result = pd.DataFrame(columns=['First', 'Second', 'Similarity bw originals', 'L2 bw originals', 'User1_gen_sim',
                                    'User1_gen_L2', 'User2_gen_sim', 'User2_gen_L2'])
-    users_df = get_same_phrases()
+    users_list = []
+    if users_type == 'unseen':
+        users_list = [x for x in os.listdir(ROOT_PATH) if len(x) == 3]
+        inf = Inferencer(GRAPHEME_MODEL_PATH, VOCODER_PATH, ENCODER_PATH, GRAPHEME_CONFIG_PATH, VOCODER_CONFIG_PATH, ENCODER_CONFIG,
+                         UNSEEN_SPEAKERS_JSON)
+    if users_type == 'seen':
+        users_list = [f'users{i}' for i in range(1, 31)]
+        inf = Inferencer(GRAPHEME_MODEL_PATH, VOCODER_PATH, ENCODER_PATH, GRAPHEME_CONFIG_PATH, VOCODER_CONFIG_PATH, ENCODER_CONFIG,
+                         SEEN_SPEAKERS_JSON)
+    users_df = get_same_phrases(users_list)
+
     result['First'] = users_df['First'].to_list()
     result['Second'] = users_df['Second'].to_list()
 
@@ -41,17 +52,14 @@ def pitch_val_pipeline():
     result['User2_gen_sim'] = u2_sim
     result['User2_gen_L2'] = u2_L2
     print(result.mean(axis=0))
-    result.to_csv('/home/iref/PycharmProjects/tts-vc/validation/pitch_val_unseen.csv')
+    result.to_csv('/home/iref/PycharmProjects/tts-vc/validation/pitch_val_g_unseen.csv')
     return result
 
 
 
 
-def get_same_phrases(mode='val'):
+def get_same_phrases(users_list):
     root_path = ROOT_PATH
-    #users_list = [f'user{i}' for i in range(1, 31)]
-    users_list = [x for x in os.listdir(root_path) if len(x) == 3]
-    print(users_list)
     items = {}
     for user in users_list:
         items[user] = {'text': [], 'files':[]}
@@ -61,7 +69,6 @@ def get_same_phrases(mode='val'):
                 wav_file = os.path.join(root_path, user, cols[0])
                 if not wav_file.endswith('.wav'):
                     wav_file += '.wav'
-                    #print(wav_file)
                 text = cols[1].strip()
                 text = text.strip(',')
                 items[user]['text'].append(text)
@@ -96,7 +103,7 @@ def get_same_phrases(mode='val'):
 
 
 
-def get_metrics(user1, user2, mode='val'):
+def get_metrics(user1, user2, inferencer):
     phrases1 = {}
     phrases2 = {}
     with open(f'{ROOT_PATH}/{user1}/metadata.csv', 'r') as ttf:
@@ -131,10 +138,8 @@ def get_metrics(user1, user2, mode='val'):
     for phr in inter:
         wavs_1.append(res.preprocess_wav(phrases1[phr]))
         wavs_2.append(res.preprocess_wav(phrases2[phr]))
-        generated_1.append(get_wav_output(user1, phr, MODEL_PATH, CONFIG_PATH, VOCODER_PATH, VOCODER_CONFIG_PATH,
-                                          OUT_PATH, save_wavs=False))
-        generated_2.append(get_wav_output(user2, phr, MODEL_PATH, CONFIG_PATH, VOCODER_PATH, VOCODER_CONFIG_PATH,
-                                          OUT_PATH, save_wavs=False))
+        generated_1.append(inferencer.get_json_output(user1, phr, OUT_PATH, save_wavs=False))
+        generated_2.append(inferencer.get_json_output(user2, phr, OUT_PATH, save_wavs=False))
 
     generated_1 = list(map(res.preprocess_wav, generated_1))
     generated_2 = list(map(res.preprocess_wav, generated_2))
@@ -150,16 +155,17 @@ def get_metrics(user1, user2, mode='val'):
             np.inner(g_embed_2, o_embed_2), np.linalg.norm(o_embed_2 - g_embed_2)
 
 
-#print(get_same_phrases())
-#print(pitch_val_pipeline())
+def tex_postprocessing(df_path):
+    df = np.round(pd.read_csv(df_path, index_col=0), 2)
+    df.columns = ['UserA', 'UserB', 'ABsim', 'L2betweenoriginals', 'Ageneratedsim',
+                                       'L2 distance between user A and generated speaker', 'Bgeneratedsim',
+                                       'L2 distance between user A and generated speaker']
+    sim_frame = df[['UserA', 'UserB', 'ABsim', 'Ageneratedsim', 'Bgeneratedsim']]
+    overall_frame = sim_frame.median()
+    sim_frame.to_csv('/run/media/iref/Seagate Expansion Drive/spbu_diploma/g_unseen.csv', sep=',', decimal='.', index=False)
 
-frame = np.round(pd.read_csv('/home/iref/PycharmProjects/tts-vc/validation/pitch_val_unseen.csv', index_col=0), 2)
-print(frame.columns)
-frame.columns = ['UserA', 'UserB', 'ABsim', 'L2betweenoriginals', 'Ageneratedsim',
-                                   'L2 distance between user A and generated speaker', 'Bgeneratedsim',
-                                   'L2 distance between user A and generated speaker']
-sim_frame = frame[['UserA', 'UserB', 'ABsim', 'Ageneratedsim', 'Bgeneratedsim']]
-overall_frame = sim_frame.median()
-print(overall_frame)
-#sim_frame.to_csv('/run/media/iref/Seagate Expansion Drive/spbu_diploma/sim_frame_unseen.csv', sep=',', decimal='.', index=False)
-#frame.to_csv('/home/iref/PycharmProjects/tts-vc/validation/test_frame.csv', sep='\t', decimal=',', index=False)
+
+
+if __name__ =='__main__':
+    print(pitch_val_pipeline('seen'))
+
