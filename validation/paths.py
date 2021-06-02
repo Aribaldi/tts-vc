@@ -3,7 +3,7 @@ from pathlib import Path
 ROOT_PATH = Path('/home/iref/tts-vc/data/speaker_encoder_data/')
 TEXT_PATH = Path('/run/media/iref/Seagate Expansion Drive/correctness_tests/text2.txt')
 AUDIO_PATH = Path('/run/media/iref/Seagate Expansion Drive/correctness_tests/')
-SEEN_SPEAKERS_JSON = Path('/data/train_speaker_embeddings/speaker.json')
+SEEN_SPEAKERS_JSON = Path('./data/train_speaker_embeddings/speaker.json')
 UNSEEN_SPEAKERS_JSON = Path('/home/iref/PycharmProjects/tts-vc/data/val_speaker_embeddings/speaker.json')
 
 VOCODER_PATH = '/home/iref/PycharmProjects/tts-vc/models_and_weights/melgan_best_model.pth.tar'
